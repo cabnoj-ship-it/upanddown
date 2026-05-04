@@ -526,8 +526,8 @@ function handleContre(
   const target = state.players.find((p) => p.id === targetPlayerId);
   if (!target) return state;
 
-  // Target must have 2 or fewer cards (but still in game) and NOT have announced
-  if (target.hand.length > 2 || target.hand.length === 0 || target.hasAnnouncedUpDown) {
+  // Target must have EXACTLY 2 cards and NOT have announced
+  if (target.hand.length !== 2 || target.hasAnnouncedUpDown) {
     return state;
   }
 
@@ -542,7 +542,9 @@ function handleContre(
   const newHand = [...target.hand, ...penaltyCards];
 
   const updatedPlayers = state.players.map((p) =>
-    p.id === targetPlayerId ? { ...p, hand: newHand, hasAnnouncedUpDown: false } : p
+    p.id === targetPlayerId
+      ? { ...p, hand: newHand, hasAnnouncedUpDown: false, lastAnnouncedHandSize: null }
+      : p
   );
 
   const accuser = state.players.find((p) => p.id === accuserId);

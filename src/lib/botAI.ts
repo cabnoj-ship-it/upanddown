@@ -98,7 +98,11 @@ function hardStrategy(playable: Card[], state: GameState): Card {
 export function botShouldAnnounce(state: GameState): boolean {
   if (!state.enableAnnounce) return false;
   const player = getActivePlayer(state);
-  return player.hand.length === 2 && !player.hasAnnouncedUpDown;
+  return (
+    player.hand.length === 2 &&
+    !player.hasAnnouncedUpDown &&
+    player.lastAnnouncedHandSize !== 2
+  );
 }
 
 // Delay in ms before bot acts (adds realism)

@@ -5,6 +5,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import type { Player, GameState } from '@/lib/types';
 
 const AVATAR_COLORS = [
@@ -33,14 +34,29 @@ export default function PlayerInfo({
   showContre = false,
   gameState,
 }: PlayerInfoProps) {
+  // Tick to make Date.now() reactive (cooldown)
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const cooldownUntil = gameState?.contreCooldownUntil ?? 0;
+    if (Date.now() >= cooldownUntil) return;
+    const id = setInterval(() => setTick((t) => t + 1), 100);
+    return () => clearInterval(id);
+  }, [gameState?.contreCooldownUntil]);
+
+  const cooldownRemaining = Math.max(0, (gameState?.contreCooldownUntil ?? 0) - Date.now());
   const canContre =
     showContre &&
     !isMe &&
-    player.hand.length > 0 &&
-    player.hand.length <= 2 &&
+    player.hand.length === 2 && // STRICT: exactly 2 cards
     !player.hasAnnouncedUpDown &&
     gameState?.enableAnnounce !== false &&
-    Date.now() >= (gameState?.contreCooldownUntil ?? 0);
+    cooldownRemaining === 0;
+  const isContrableSoon =
+    showContre &&
+    !isMe &&
+    player.hand.length === 2 &&
+    !player.hasAnnouncedUpDown &&
+    gameState?.enableAnnounce !== false;
 
   const colorIndex = player.name.charCodeAt(0) % AVATAR_COLORS.length;
 
@@ -96,19 +112,32 @@ export default function PlayerInfo({
         </motion.span>
       )}
 
+      {/* Contre cooldown indicator */}
+      {isContrableSoon && cooldownRemaining > 0 && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="ml-auto px-2 py-1 bg-white/5 border border-white/10 rounded-xl text-[0.55rem] font-black text-white/40"
+          title="Attente avant de pouvoir contrer"
+        >
+          ⏳ {(cooldownRemaining / 1000).toFixed(1)}s
+        </motion.div>
+      )}
+
       {/* Contre button */}
       {canContre && (
         <motion.button
           initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          whileHover={{ scale: 1.1 }}
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ repeat: Infinity, duration: 0.8 }}
+          whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.9 }}
           onClick={onContre}
           className="ml-auto px-2.5 py-1 bg-gradient-to-r from-red-600 to-rose-700 text-white text-[0.6rem] font-black rounded-xl
-            border border-red-400/40 shadow-lg shadow-red-500/20
-            hover:shadow-red-500/40 transition-all"
+            border border-red-400/60 shadow-lg shadow-red-500/40
+            hover:shadow-red-500/60 transition-all"
         >
-          CONTRE
+          ⚔️ CONTRE
         </motion.button>
       )}
     </motion.div>

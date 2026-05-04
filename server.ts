@@ -230,6 +230,38 @@ app.prepare().then(() => {
     }, 2800);
   }
 
+  function scheduleBotAnnounce(room: Room, botId: string, difficulty: BotDifficulty) {
+    // Chance that bot "forgets" to announce → vulnerable to contre
+    const forgetChance =
+      difficulty === 'hard' ? 0.05 :   // Hard: forgets 5% of time
+      difficulty === 'medium' ? 0.20 : // Medium: 20%
+      0.45;                             // Easy: 45%
+    if (Math.random() < forgetChance) return; // Bot forgets → can be contre'd
+
+    // Delayed announce so humans have a chance to contre
+    const delay =
+      difficulty === 'hard' ? 600 + Math.random() * 400 :  // 0.6-1.0s
+      difficulty === 'medium' ? 900 + Math.random() * 500 : // 0.9-1.4s
+      1200 + Math.random() * 700;                            // 1.2-1.9s
+
+    const timer = setTimeout(() => {
+      if (!room.gameState || room.gameState.phase === 'GAME_OVER') return;
+      const p = room.gameState.players.find((x) => x.id === botId);
+      if (!p) return;
+      // Only announce if still at 2 cards, not yet announced, and not blocked by re-announce rule
+      if (p.hand.length !== 2 || p.hasAnnouncedUpDown || p.lastAnnouncedHandSize === 2) return;
+
+      room.gameState = gameReducer(room.gameState, {
+        type: 'ANNOUNCE_UP_DOWN',
+        playerId: botId,
+      });
+      emitSFXToRoom(room, 'alert');
+      broadcastGameState(room);
+    }, delay);
+
+    room.botTimers.set(botId + ':announce', timer);
+  }
+
   function scheduleBotTurn(room: Room) {
     if (!room.gameState || room.gameState.phase === 'GAME_OVER') return;
 
@@ -272,19 +304,15 @@ app.prepare().then(() => {
         emitSFXToRoom(room, 'draw');
       }
 
-      // After playing/drawing, bot announces Up & Down if needed
-      const botAfterAction = room.gameState.players.find((p) => p.id === active.id);
-      if (botAfterAction && botAfterAction.hand.length > 0 && botAfterAction.hand.length <= 2 && !botAfterAction.hasAnnouncedUpDown) {
-        room.gameState = gameReducer(room.gameState, {
-          type: 'ANNOUNCE_UP_DOWN',
-          playerId: active.id,
-        });
-        emitSFXToRoom(room, 'alert');
-      }
-
       broadcastGameState(room);
 
-      // Trigger contre window if bot is now contrable
+      // After playing/drawing, schedule delayed Up & Down announce (gives humans a chance to contre)
+      const botAfterAction = room.gameState.players.find((p) => p.id === active.id);
+      if (botAfterAction && botAfterAction.hand.length === 2 && !botAfterAction.hasAnnouncedUpDown && botAfterAction.lastAnnouncedHandSize !== 2) {
+        scheduleBotAnnounce(room, active.id, difficulty);
+      }
+
+      // Trigger contre window if bot is now contrable (for other bots to contre humans)
       const botPlayer = room.gameState.players.find((p) => p.id === active.id);
       if (botPlayer && botPlayer.hand.length > 0 && botPlayer.hand.length <= 2 && !botPlayer.hasAnnouncedUpDown) {
         triggerBotContre(room, active.id);
@@ -311,6 +339,7 @@ app.prepare().then(() => {
     socket.on('room:list', () => {
       const list: RoomInfo[] = [];
       rooms.forEach((room) => {
+        if (!room.isPublic) return; // hide private rooms
         list.push({
           roomId: room.id,
           players: room.players.map((p) => ({ id: p.id, name: p.name })),
@@ -500,7 +529,13 @@ app.prepare().then(() => {
         return;
       }
 
-      room.gameState = createInitialState(roomId, room.players);
+      room.gameState = createInitialState(roomId, room.players, {
+        handSize: room.settings?.handSize,
+        turnTimeLimit: room.settings?.turnTimeLimit,
+        totalRounds: room.settings?.totalRounds,
+        enableAnnounce: room.settings?.enableAnnounce ?? true,
+        isPublic: room.isPublic,
+      });
       broadcastGameState(room);
       broadcastRoomList();
       scheduleBotTurn(room);
@@ -661,6 +696,8 @@ app.prepare().then(() => {
         scores,
         handSize: prev?.handSize ?? 7,
         turnTimeLimit: prev?.turnTimeLimit ?? 15,
+        enableAnnounce: prev?.enableAnnounce ?? true,
+        isPublic: prev?.isPublic ?? true,
       });
       broadcastGameState(room);
       scheduleBotTurn(room);

@@ -22,6 +22,7 @@ import { triggerWinConfetti, triggerClosureBurst } from './VFX';
 import QuickChat from './QuickChat';
 import FloatingChat from './FloatingChat';
 import TutorialOverlay from './TutorialOverlay';
+import ActionToast from './ActionToast';
 
 export default function GameBoard() {
   const { playCard, drawCard, announceUpDown, contre, restartGame, quitGame, sendReaction, sendChat } = useSocket();
@@ -500,6 +501,9 @@ export default function GameBoard() {
 
       {/* Tutorial for first-time players */}
       <TutorialOverlay />
+
+      {/* Action toasts (contre, announce, closure, win) */}
+      <ActionToast lastAction={gameState.lastAction} />
     </div>
   );
 }
