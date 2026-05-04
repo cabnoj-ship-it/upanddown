@@ -21,9 +21,9 @@ interface CardProps {
 }
 
 const SIZE_CLASSES = {
-  sm: 'w-11 h-16 text-xs',
-  md: 'w-16 h-24 text-lg',
-  lg: 'w-20 h-30 text-2xl',
+  sm: 'w-12 h-[4.5rem] text-xs',
+  md: 'w-[4.5rem] h-[6.5rem] sm:w-20 sm:h-28 text-lg',
+  lg: 'w-24 h-36 text-2xl',
 };
 
 export default function Card({

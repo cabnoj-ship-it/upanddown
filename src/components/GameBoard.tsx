@@ -24,6 +24,8 @@ import FloatingChat from './FloatingChat';
 import TutorialOverlay from './TutorialOverlay';
 import ActionToast from './ActionToast';
 import VoiceControl from './VoiceControl';
+import TableBackground from './TableBackground';
+import OpponentSeat from './OpponentSeat';
 
 export default function GameBoard() {
   const { playCard, drawCard, announceUpDown, contre, restartGame, quitGame, sendReaction, sendChat } = useSocket();
@@ -136,92 +138,55 @@ export default function GameBoard() {
   const lastPlayed = gameState.lastPlayedCardInfo;
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, #0f0c29 0%, #1a1040 25%, #1c1250 50%, #16132e 75%, #0f0c29 100%)',
-      }}
-    >
-      {/* Animated gradient orbs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-20 -left-20 w-64 h-64 bg-violet-600/15 rounded-full blur-[80px] animate-pulse" />
-        <div className="absolute top-1/3 -right-20 w-72 h-72 bg-fuchsia-600/10 rounded-full blur-[100px]" />
-        <div className="absolute -bottom-20 left-1/3 w-80 h-80 bg-cyan-600/10 rounded-full blur-[90px]" />
-        <div className="absolute top-1/2 left-1/4 w-40 h-40 bg-rose-600/8 rounded-full blur-[60px]" />
-      </div>
+    <div className="fixed inset-0 flex flex-col overflow-hidden select-none">
+      {/* Felt table background */}
+      <TableBackground />
 
-      {/* Top – Opponents (compact) */}
-      <div className="relative z-10 shrink-0 flex flex-wrap justify-center gap-2 px-2 pt-2 pb-1">
-        {opponents.map((opp) => (
-          <div key={opp.id} className="flex flex-col items-center gap-0.5">
-            {/* Carte jouée par cet adversaire */}
-            <AnimatePresence mode="wait">
-              {lastPlayed && lastPlayed.playerId === opp.id && (
-                <motion.div
-                  key={lastPlayed.card.id}
-                  initial={{ scale: 0, y: 10 }}
-                  animate={{ scale: 1, y: 0 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                >
-                  <Card card={lastPlayed.card} size="sm" disabled />
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <div className="flex items-center gap-1.5">
-              <PlayerInfo
-                player={opp}
-                isActive={activePlayer?.id === opp.id}
-                isMe={false}
-                showContre
-                onContre={() => handleContre(opp.id)}
-                gameState={gameState}
-              />
-              <div className="flex -space-x-3">
-                {opp.hand.slice(0, 5).map((c, i) => (
-                  <Card key={c.id + i} card={c} faceDown={c.id === 'hidden'} size="sm" disabled index={i} />
-                ))}
-                {opp.hand.length > 5 && (
-                  <span className="text-white/30 text-[0.6rem] self-center ml-1 font-bold">
-                    +{opp.hand.length - 5}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Middle – Center zone (takes remaining space) */}
-      <div className="flex-1 min-h-0 flex flex-col items-center justify-center relative z-10 gap-2 px-3">
-        {/* Tournament info */}
+      {/* TOP BAR — Opponents in seats (horizontally scrollable on mobile) */}
+      <div className="relative z-10 shrink-0 pt-2 pb-1">
+        <div className="flex items-start justify-center gap-2 px-2 overflow-x-auto no-scrollbar">
+          {opponents.map((opp) => (
+            <OpponentSeat
+              key={opp.id}
+              opponent={opp}
+              isActive={activePlayer?.id === opp.id}
+              gameState={gameState}
+              onContre={() => handleContre(opp.id)}
+            />
+          ))}
+        </div>
+        {/* Tournament score bar */}
         {gameState.totalRounds > 1 && (
-          <div className="flex flex-col items-center gap-1">
-            <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 text-xs font-black">
-              Manche {gameState.roundNumber} / {gameState.totalRounds}
-            </div>
-            <div className="flex gap-2">
-              {gameState.players.map((p) => (
-                <div key={p.id} className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/3 border border-white/5 text-[0.6rem] font-bold text-white/50">
-                  <span className="truncate max-w-[3rem]">{p.name}</span>
-                  <span className="text-amber-300/80">{gameState.scores[p.id] ?? 0}pt</span>
-                </div>
-              ))}
-            </div>
+          <div className="flex items-center justify-center gap-1.5 mt-1 px-2 flex-wrap">
+            <span className="px-2 py-0.5 rounded-md bg-amber-400/20 border border-amber-300/30 text-amber-200 text-[0.6rem] font-black">
+              Manche {gameState.roundNumber}/{gameState.totalRounds}
+            </span>
+            {gameState.players.map((p) => (
+              <span
+                key={p.id}
+                className="px-1.5 py-0.5 rounded-md bg-black/30 border border-white/5 text-[0.55rem] font-bold text-white/60"
+              >
+                {p.name.slice(0, 6)}: <span className="text-amber-300">{gameState.scores[p.id] ?? 0}</span>
+              </span>
+            ))}
           </div>
         )}
+      </div>
 
+      {/* CENTER — Table (Draw pile + Discard pile) */}
+      <div className="flex-1 min-h-0 flex flex-col items-center justify-center relative z-10 gap-3 px-3">
         {/* Timer */}
         {turnSecondsLeft !== null && turnSecondsLeft <= 15 && gameState.phase !== 'GAME_OVER' && (
           <motion.div
             key={turnSecondsLeft}
-            initial={{ scale: 1.2 }}
+            initial={{ scale: 1.3 }}
             animate={{ scale: 1 }}
-            className={`px-3 py-1 rounded-full font-black text-xs border
+            className={`absolute top-2 px-3 py-1 rounded-full font-black text-xs border-2 backdrop-blur
               ${turnSecondsLeft <= 5
-                ? 'bg-red-500/20 border-red-400/40 text-red-300'
+                ? 'bg-red-500/30 border-red-300/60 text-red-100'
                 : turnSecondsLeft <= 10
-                  ? 'bg-amber-500/15 border-amber-400/30 text-amber-300'
-                  : 'bg-white/5 border-white/10 text-white/40'
+                  ? 'bg-amber-500/25 border-amber-300/50 text-amber-100'
+                  : 'bg-white/10 border-white/20 text-white/80'
               }`}
           >
             ⏱ {turnSecondsLeft}s
@@ -234,113 +199,114 @@ export default function GameBoard() {
           canDraw={canDraw}
         />
 
-        {/* Last action */}
-        <AnimatePresence mode="wait">
-          {gameState.lastAction && (
+        {/* Phase indicators */}
+        <AnimatePresence>
+          {gameState.doublePlayPending && isMyTurn && (
             <motion.div
-              key={gameState.lastAction}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="px-3 py-1 rounded-full bg-white/5 backdrop-blur border border-white/10
-                text-white/60 text-xs font-medium text-center max-w-[70vw] truncate"
+              initial={{ scale: 0, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0 }}
+              className="px-4 py-1.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600
+                border-2 border-rose-300/60 text-white text-xs font-black shadow-xl shadow-rose-500/40"
             >
-              {gameState.lastAction}
+              🎯 Posez une seconde carte !
+            </motion.div>
+          )}
+
+          {gameState.closurePlayPending && isMyTurn && (
+            <motion.div
+              initial={{ scale: 0, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0 }}
+              className="px-4 py-1.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600
+                border-2 border-cyan-300/60 text-white text-xs font-black shadow-xl shadow-cyan-500/40"
+            >
+              🔒 Pile fermée — Nouvelle base !
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Phase indicators */}
-        {gameState.doublePlayPending && isMyTurn && (
+        {/* Your turn banner (subtle, top of hand area) */}
+        {isMyTurn && !gameState.doublePlayPending && !gameState.closurePlayPending && gameState.phase !== 'GAME_OVER' && (
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: [1, 1.04, 1] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            className="px-4 py-1.5 rounded-2xl bg-gradient-to-r from-rose-600/30 to-pink-600/30
-              border border-rose-400/40 text-rose-200 text-xs font-black backdrop-blur"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ repeat: Infinity, duration: 1.6 }}
+            className="absolute bottom-2 flex items-center gap-1.5 px-3 py-1 rounded-full
+              bg-emerald-500/20 border border-emerald-400/40 backdrop-blur"
           >
-            Posez une seconde carte !
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="text-emerald-200 text-[0.65rem] font-black tracking-wider">À VOUS DE JOUER</span>
           </motion.div>
         )}
-
-        {gameState.closurePlayPending && isMyTurn && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: [1, 1.04, 1] }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            className="px-4 py-1.5 rounded-2xl bg-gradient-to-r from-cyan-600/30 to-blue-600/30
-              border border-cyan-400/40 text-cyan-200 text-xs font-black backdrop-blur"
-          >
-            Pile fermée ! Posez une nouvelle base.
-          </motion.div>
-        )}
-
       </div>
 
-      {/* Bottom – My info + Hand (fixed height) */}
-      <div className="relative z-10 shrink-0 px-2 pb-2">
-        {/* My info bar */}
-        <div className="flex items-center justify-between px-2 py-1 gap-2">
-          <PlayerInfo
-            player={me}
-            isActive={isMyTurn}
-            isMe
-          />
+      {/* BOTTOM — Action bar + My hand */}
+      <div className="relative z-10 shrink-0 pb-2">
+        {/* Action bar (contextual buttons) */}
+        <div className="flex items-center justify-between px-2 pb-1 gap-1.5 overflow-x-auto no-scrollbar">
+          {/* My player pill */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-black/40 border border-white/10 backdrop-blur">
+            <div className={`w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600
+              flex items-center justify-center text-white font-black text-[0.6rem] shadow-md
+              ${isMyTurn ? 'ring-2 ring-emerald-400' : ''}`}
+            >
+              {me.name[0]?.toUpperCase()}
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-[0.6rem] font-black text-white truncate max-w-[4rem]">
+                {me.name}
+              </span>
+              <span className="text-[0.55rem] text-white/50 font-bold">
+                {me.hand.length} 🃏
+              </span>
+            </div>
+            {me.hasAnnouncedUpDown && (
+              <span className="px-1.5 py-0.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white text-[0.5rem] font-black rounded-md">
+                U&D!
+              </span>
+            )}
+          </div>
 
-          {/* Announce button */}
-          {gameState.enableAnnounce && me.hand.length === 2 && !me.hasAnnouncedUpDown && isMyTurn && (
+          {/* Announce button (huge and obvious when needed) */}
+          {gameState.enableAnnounce && me.hand.length === 2 && !me.hasAnnouncedUpDown && me.lastAnnouncedHandSize !== 2 && (
             <motion.button
               initial={{ scale: 0 }}
-              animate={{ scale: [1, 1.08, 1] }}
-              transition={{ repeat: Infinity, duration: 1 }}
+              animate={{ scale: [1, 1.12, 1] }}
+              transition={{ repeat: Infinity, duration: 0.7 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleAnnounce}
-              className="px-4 py-2.5 rounded-2xl font-black text-xs
+              className="px-4 py-2 rounded-2xl font-black text-sm
                 bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-600
-                text-white shadow-lg shadow-pink-500/30
-                hover:shadow-pink-500/50 transition-all"
+                text-white shadow-xl shadow-pink-500/50
+                border-2 border-rose-200/60"
             >
-              Up & Down !
+              🚀 UP & DOWN !
             </motion.button>
           )}
 
-          {/* Voice chat */}
-          <VoiceControl />
-
-          {/* Reactions */}
-          <ReactionBar onReact={(emoji) => sendReaction(gameState.roomId, emoji)} />
-
-          {/* Quit button */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              if (confirm('Voulez-vous vraiment abandonner la partie ?')) {
-                quitGame(gameState.roomId);
-              }
-            }}
-            className="px-3 py-1.5 rounded-xl font-black text-[0.6rem]
-              bg-red-500/20 border border-red-400/30 text-red-300
-              hover:bg-red-500/30 hover:text-red-200 transition-all"
-          >
-            ❌ Abandonner
-          </motion.button>
-
-          {/* Turn indicator */}
-          {isMyTurn && (
-            <motion.div
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full
-                bg-emerald-500/20 border border-emerald-400/30"
+          {/* Right-side controls */}
+          <div className="flex items-center gap-1.5">
+            <VoiceControl />
+            <ReactionBar onReact={(emoji) => sendReaction(gameState.roomId, emoji)} />
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (confirm('Voulez-vous vraiment abandonner la partie ?')) {
+                  quitGame(gameState.roomId);
+                }
+              }}
+              className="px-2 py-1.5 rounded-xl font-black text-[0.6rem]
+                bg-red-500/20 border border-red-400/30 text-red-300
+                hover:bg-red-500/30 transition-all"
+              title="Abandonner"
             >
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50" />
-              <span className="text-emerald-300 text-[0.6rem] font-bold">Votre tour</span>
-            </motion.div>
-          )}
+              ❌
+            </motion.button>
+          </div>
         </div>
 
-        {/* Hand */}
+        {/* Hand — the star of the show at the bottom */}
         <PlayerHand
           cards={me.hand}
           gameState={gameState}

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f0c29;
+  --background: #0a1e14;
   --foreground: #f0f0ff;
 }
 
@@ -15,17 +15,35 @@
 html, body {
   height: 100%;
   overflow: hidden;
+  /* Prevent tap blue highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent pinch-zoom */
+  touch-action: manipulation;
+  /* Safe area for notches */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  overscroll-behavior: none;
 }
 
-/* Custom scrollbar */
+/* Hide scrollbars but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom scrollbar for panels */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -36,4 +54,9 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(139, 92, 246, 0.5);
+}
+
+/* Responsive helper — ultra-small screens */
+@media (max-width: 360px) {
+  html { font-size: 14px; }
 }

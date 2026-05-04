@@ -23,20 +23,22 @@ export default function PlayerHand({
   onPlayCard,
 }: PlayerHandProps) {
   const cardCount = cards.length;
-  // Tighter fan on mobile, wider on desktop
-  const maxFanAngle = Math.min(cardCount * 3.5, 35);
+  // Wider fan for nicer UNO look
+  const maxFanAngle = Math.min(cardCount * 5, 55);
   const fanStep = cardCount > 1 ? maxFanAngle / (cardCount - 1) : 0;
   const startAngle = -maxFanAngle / 2;
-  // Tighter overlap when many cards
-  const overlapRem = cardCount > 7 ? -0.75 : cardCount > 5 ? -0.6 : -0.4;
+  // Adapt overlap to card count (prevent cards going off-screen)
+  const overlapRem = cardCount > 9 ? -1.4 : cardCount > 7 ? -1.1 : cardCount > 5 ? -0.7 : -0.3;
+  // Size: md on desktop, md on mobile too (better readability), sm if too many cards
+  const cardSize = cardCount > 10 ? 'sm' : 'md';
 
   return (
-    <div className="relative flex items-end justify-center w-full h-[100px] md:h-[110px]">
+    <div className="relative flex items-end justify-center w-full h-[130px] sm:h-[150px] pt-6 overflow-visible">
       <AnimatePresence mode="popLayout">
         {cards.map((card, i) => {
           const playable = isMyTurn && isValidPlay(gameState, card);
           const angle = startAngle + fanStep * i;
-          const yOffset = Math.abs(angle) * 0.35;
+          const yOffset = Math.abs(angle) * 0.6; // More arc curvature
 
           return (
             <motion.div
@@ -46,7 +48,7 @@ export default function PlayerHand({
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.4, y: -160, opacity: 0, rotate: -10 }}
               transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-              className="relative"
+              className="relative origin-bottom"
               style={{
                 transform: `rotate(${angle}deg) translateY(${yOffset}px)`,
                 marginLeft: i === 0 ? 0 : `${overlapRem}rem`,
@@ -58,7 +60,7 @@ export default function PlayerHand({
                 onClick={() => onPlayCard(card.id)}
                 disabled={!playable}
                 highlight={playable}
-                size={cardCount > 8 ? 'sm' : 'md'}
+                size={cardSize}
                 index={i}
               />
             </motion.div>
