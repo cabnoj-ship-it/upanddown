@@ -1,0 +1,8 @@
+Place your sound files here:
+- draw.mp3 (card draw sound)
+- play.mp3 (card play sound)
+- closure.mp3 (pile closure sound)
+- alert.mp3 (Up & Down announcement)
+- win.mp3 (victory sound)
+- error.mp3 (error/contre sound)
+- turn.mp3 (turn notification)
