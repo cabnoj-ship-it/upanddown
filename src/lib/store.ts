@@ -29,6 +29,14 @@ interface AppState {
   turnSecondsLeft: number | null;
   cardTheme: CardTheme;
 
+  // Voice chat
+  voiceEnabled: boolean;          // User preference (auto-join voice)
+  voiceConnected: boolean;        // Actually connected
+  voiceMutedSelf: boolean;        // Microphone muted
+  voiceMutedPeers: Record<string, boolean>;  // peerId → muted
+  voiceSpeakingPeers: Record<string, boolean>; // peerId → is speaking (VAD)
+  voiceInputDevice: string | null; // Selected mic deviceId
+
   // Actions
   setPlayerId: (id: string) => void;
   setPlayerName: (name: string) => void;
@@ -44,12 +52,29 @@ interface AppState {
   addChatMessage: (playerId: string, playerName: string, message: string) => void;
   setTurnSecondsLeft: (s: number | null) => void;
   setCardTheme: (t: CardTheme) => void;
+  // Voice
+  setVoiceEnabled: (enabled: boolean) => void;
+  setVoiceConnected: (connected: boolean) => void;
+  setVoiceMutedSelf: (muted: boolean) => void;
+  togglePeerMuted: (peerId: string) => void;
+  setPeerSpeaking: (peerId: string, speaking: boolean) => void;
+  setVoiceInputDevice: (deviceId: string | null) => void;
   reset: () => void;
 }
 
 function getStoredName(): string {
   if (typeof window === 'undefined') return '';
   try { return localStorage.getItem('upanddown_name') ?? ''; } catch { return ''; }
+}
+
+function getStoredVoiceEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  try { return localStorage.getItem('upanddown_voice_enabled') === 'true'; } catch { return false; }
+}
+
+function getStoredVoiceDevice(): string | null {
+  if (typeof window === 'undefined') return null;
+  try { return localStorage.getItem('upanddown_voice_device'); } catch { return null; }
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -66,6 +91,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   chatMessages: [],
   turnSecondsLeft: null,
   cardTheme: getStoredTheme(),
+  voiceEnabled: getStoredVoiceEnabled(),
+  voiceConnected: false,
+  voiceMutedSelf: false,
+  voiceMutedPeers: {},
+  voiceSpeakingPeers: {},
+  voiceInputDevice: getStoredVoiceDevice(),
 
   setPlayerId: (id) => set({ playerId: id }),
   setPlayerName: (name) => {
@@ -99,6 +130,29 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ cardTheme: t });
     try { localStorage.setItem('upanddown_theme', t); } catch {}
   },
+  // Voice actions
+  setVoiceEnabled: (enabled) => {
+    set({ voiceEnabled: enabled });
+    try { localStorage.setItem('upanddown_voice_enabled', String(enabled)); } catch {}
+  },
+  setVoiceConnected: (connected) => set({ voiceConnected: connected }),
+  setVoiceMutedSelf: (muted) => set({ voiceMutedSelf: muted }),
+  togglePeerMuted: (peerId) =>
+    set((s) => ({
+      voiceMutedPeers: { ...s.voiceMutedPeers, [peerId]: !s.voiceMutedPeers[peerId] },
+    })),
+  setPeerSpeaking: (peerId, speaking) =>
+    set((s) => ({
+      voiceSpeakingPeers: { ...s.voiceSpeakingPeers, [peerId]: speaking },
+    })),
+  setVoiceInputDevice: (deviceId) => {
+    set({ voiceInputDevice: deviceId });
+    try {
+      if (deviceId) localStorage.setItem('upanddown_voice_device', deviceId);
+      else localStorage.removeItem('upanddown_voice_device');
+    } catch {}
+  },
+
   queueSFX: (sfx) => set((s) => ({ sfxQueue: [...s.sfxQueue, sfx] })),
   dequeueSFX: () => {
     const q = get().sfxQueue;

@@ -7,6 +7,7 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import type { Player, GameState } from '@/lib/types';
+import { useAppStore } from '@/lib/store';
 
 const AVATAR_COLORS = [
   'from-rose-500 to-pink-600',
@@ -43,6 +44,12 @@ export default function PlayerInfo({
     return () => clearInterval(id);
   }, [gameState?.contreCooldownUntil]);
 
+  // Voice chat state
+  const voiceConnected = useAppStore((s) => s.voiceConnected);
+  const isSpeaking = useAppStore((s) => s.voiceSpeakingPeers[player.id] ?? false);
+  const isMutedPeer = useAppStore((s) => s.voiceMutedPeers[player.id] ?? false);
+  const togglePeerMuted = useAppStore((s) => s.togglePeerMuted);
+
   const cooldownRemaining = Math.max(0, (gameState?.contreCooldownUntil ?? 0) - Date.now());
   const canContre =
     showContre &&
@@ -73,12 +80,23 @@ export default function PlayerInfo({
         ${!player.isConnected ? 'opacity-40' : ''}
       `}
     >
-      {/* Avatar */}
-      <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${AVATAR_COLORS[colorIndex]}
-        flex items-center justify-center text-white font-black text-xs shadow-md
-        ${isActive ? 'ring-2 ring-emerald-400/50' : ''}`}
-      >
-        {player.isBot ? '🤖' : player.name[0]?.toUpperCase()}
+      {/* Avatar with speaking indicator */}
+      <div className="relative">
+        <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${AVATAR_COLORS[colorIndex]}
+          flex items-center justify-center text-white font-black text-xs shadow-md
+          ${isActive ? 'ring-2 ring-emerald-400/50' : ''}
+          ${isSpeaking && !isMutedPeer ? 'ring-2 ring-green-400 animate-pulse' : ''}`}
+        >
+          {player.isBot ? '🤖' : player.name[0]?.toUpperCase()}
+        </div>
+        {/* Speaking ring animation */}
+        {isSpeaking && !isMutedPeer && !player.isBot && (
+          <motion.div
+            className="absolute inset-0 rounded-full border-2 border-green-400"
+            animate={{ scale: [1, 1.3, 1], opacity: [0.8, 0, 0.8] }}
+            transition={{ repeat: Infinity, duration: 1 }}
+          />
+        )}
       </div>
 
       <div className="flex flex-col min-w-0">
@@ -99,6 +117,23 @@ export default function PlayerInfo({
           {player.hand.length} carte{player.hand.length !== 1 ? 's' : ''}
         </span>
       </div>
+
+      {/* Mute peer button (only for other human players when voice connected) */}
+      {!isMe && !player.isBot && voiceConnected && (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => togglePeerMuted(player.id)}
+          className={`w-6 h-6 rounded-full flex items-center justify-center text-[0.6rem] transition-all
+            ${isMutedPeer
+              ? 'bg-red-500/30 text-red-300 hover:bg-red-500/50'
+              : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white/70'
+            }`}
+          title={isMutedPeer ? 'Réactiver ce joueur' : 'Couper ce joueur'}
+        >
+          {isMutedPeer ? '🔇' : '🔊'}
+        </motion.button>
+      )}
 
       {/* Announced badge */}
       {player.hasAnnouncedUpDown && (

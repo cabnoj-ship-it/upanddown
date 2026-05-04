@@ -23,6 +23,7 @@ import QuickChat from './QuickChat';
 import FloatingChat from './FloatingChat';
 import TutorialOverlay from './TutorialOverlay';
 import ActionToast from './ActionToast';
+import VoiceControl from './VoiceControl';
 
 export default function GameBoard() {
   const { playCard, drawCard, announceUpDown, contre, restartGame, quitGame, sendReaction, sendChat } = useSocket();
@@ -302,6 +303,9 @@ export default function GameBoard() {
               Up & Down !
             </motion.button>
           )}
+
+          {/* Voice chat */}
+          <VoiceControl />
 
           {/* Reactions */}
           <ReactionBar onReact={(emoji) => sendReaction(gameState.roomId, emoji)} />

@@ -105,6 +105,12 @@ export interface ServerToClientEvents {
   'chat:message': (msg: { player: string; text: string }) => void;
   'game:reaction': (data: { playerId: string; playerName: string; emoji: string }) => void;
   'game:chat': (data: { playerId: string; playerName: string; message: string }) => void;
+  // Voice chat signaling (WebRTC)
+  'voice:peer-joined': (data: { peerId: string; peerName: string }) => void;
+  'voice:peer-left': (data: { peerId: string }) => void;
+  'voice:offer': (data: { fromPeerId: string; offer: RTCSessionDescriptionInit }) => void;
+  'voice:answer': (data: { fromPeerId: string; answer: RTCSessionDescriptionInit }) => void;
+  'voice:ice-candidate': (data: { fromPeerId: string; candidate: RTCIceCandidateInit }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -122,6 +128,12 @@ export interface ClientToServerEvents {
   'game:reaction': (data: { roomId: string; emoji: string }) => void;
   'room:addBot': (data: { roomId: string }) => void;
   'game:chat': (data: { roomId: string; message: string }) => void;
+  // Voice chat signaling (WebRTC)
+  'voice:join': (data: { roomId: string }) => void;
+  'voice:leave': (data: { roomId: string }) => void;
+  'voice:offer': (data: { roomId: string; targetPeerId: string; offer: RTCSessionDescriptionInit }) => void;
+  'voice:answer': (data: { roomId: string; targetPeerId: string; answer: RTCSessionDescriptionInit }) => void;
+  'voice:ice-candidate': (data: { roomId: string; targetPeerId: string; candidate: RTCIceCandidateInit }) => void;
 }
 
 export type SFXType = 'draw' | 'play' | 'closure' | 'alert' | 'win' | 'error' | 'turn';

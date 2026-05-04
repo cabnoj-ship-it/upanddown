@@ -770,6 +770,62 @@ app.prepare().then(() => {
       }
     });
 
+    // ── Voice chat signaling (WebRTC) ────────────────────
+    socket.on('voice:join', ({ roomId }) => {
+      const room = rooms.get(roomId);
+      if (!room) return;
+      const playerId = (socket as any).playerId as string;
+      const player = room.players.find((p) => p.id === playerId);
+      if (!player || player.isBot) return;
+
+      // Notify existing voice participants about the new peer
+      // Each other human player receives an event so they can initiate an offer
+      room.players.forEach((p) => {
+        if (p.isBot || p.id === playerId) return;
+        io.to(p.socketId).emit('voice:peer-joined', {
+          peerId: playerId,
+          peerName: player.name,
+        });
+      });
+    });
+
+    socket.on('voice:leave', ({ roomId }) => {
+      const room = rooms.get(roomId);
+      if (!room) return;
+      const playerId = (socket as any).playerId as string;
+      room.players.forEach((p) => {
+        if (p.isBot || p.id === playerId) return;
+        io.to(p.socketId).emit('voice:peer-left', { peerId: playerId });
+      });
+    });
+
+    socket.on('voice:offer', ({ roomId, targetPeerId, offer }) => {
+      const room = rooms.get(roomId);
+      if (!room) return;
+      const fromPeerId = (socket as any).playerId as string;
+      const target = room.players.find((p) => p.id === targetPeerId);
+      if (!target || target.isBot) return;
+      io.to(target.socketId).emit('voice:offer', { fromPeerId, offer });
+    });
+
+    socket.on('voice:answer', ({ roomId, targetPeerId, answer }) => {
+      const room = rooms.get(roomId);
+      if (!room) return;
+      const fromPeerId = (socket as any).playerId as string;
+      const target = room.players.find((p) => p.id === targetPeerId);
+      if (!target || target.isBot) return;
+      io.to(target.socketId).emit('voice:answer', { fromPeerId, answer });
+    });
+
+    socket.on('voice:ice-candidate', ({ roomId, targetPeerId, candidate }) => {
+      const room = rooms.get(roomId);
+      if (!room) return;
+      const fromPeerId = (socket as any).playerId as string;
+      const target = room.players.find((p) => p.id === targetPeerId);
+      if (!target || target.isBot) return;
+      io.to(target.socketId).emit('voice:ice-candidate', { fromPeerId, candidate });
+    });
+
     // ── Reconnect ────────────────────────────────────────
     socket.on('room:reconnect' as any, ({ playerId: reconnectId }: { playerId: string }) => {
       const entry = disconnectedPlayers.get(reconnectId);
@@ -809,6 +865,15 @@ app.prepare().then(() => {
       const roomId = (socket as any).roomId as string | undefined;
       const playerId = (socket as any).playerId as string | undefined;
       if (!roomId) return;
+
+      // Notify voice peers
+      const room0 = rooms.get(roomId);
+      if (room0 && playerId) {
+        room0.players.forEach((p) => {
+          if (p.isBot || p.id === playerId) return;
+          io.to(p.socketId).emit('voice:peer-left', { peerId: playerId });
+        });
+      }
 
       const room = rooms.get(roomId);
       if (!room) return;

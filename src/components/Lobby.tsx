@@ -11,6 +11,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { useAppStore } from '@/lib/store';
 import StatsDisplay from './StatsDisplay';
 import RulesPanel from './RulesPanel';
+import VoiceControl from './VoiceControl';
 
 const FLOATING_CARDS = ['0', '5', '12', '▲', '▼', '7', '3', '9', '1', '11', 'UP', 'DN', '6', '2', '8'];
 const CARD_COLORS = [
@@ -145,6 +146,9 @@ export default function Lobby() {
   return (
     <div className="relative flex flex-col items-center h-full p-4 overflow-y-auto overflow-x-hidden">
       <StatsDisplay />
+      <div className="absolute top-4 left-4 z-20">
+        <VoiceControl />
+      </div>
       <FloatingBackground />
 
       <div className="relative z-10 flex flex-col items-center gap-5 w-full max-w-md pt-8 md:pt-16">
