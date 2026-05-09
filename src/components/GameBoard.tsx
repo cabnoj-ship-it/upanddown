@@ -1,5 +1,5 @@
 // ============================================================
-// Up and Down – Game Board (Vibrant & Colorful)
+// Up and Down – Professional Game Board (Casino Style)
 // ============================================================
 
 'use client';
@@ -142,9 +142,21 @@ export default function GameBoard() {
       {/* Felt table background */}
       <TableBackground />
 
-      {/* TOP BAR — Opponents in seats (horizontally scrollable on mobile) */}
-      <div className="relative z-10 shrink-0 pt-2 pb-1">
-        <div className="flex items-start justify-center gap-2 px-2 overflow-x-auto no-scrollbar">
+      {/* TOP BAR — Professional header with opponents */}
+      <div className="relative z-10 shrink-0 pt-2 pb-1.5 px-2">
+        {/* Tournament info bar */}
+        {gameState.totalRounds > 1 && (
+          <div className="flex items-center justify-center mb-2">
+            <div className="px-3 py-1 rounded-lg bg-amber-400/15 border border-amber-300/40 backdrop-blur-sm">
+              <span className="text-amber-200 text-[0.65rem] font-black tracking-wider">
+                Manche {gameState.roundNumber} / {gameState.totalRounds}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Opponents row */}
+        <div className="flex items-start justify-center gap-2 overflow-x-auto no-scrollbar pb-1">
           {opponents.map((opp) => (
             <OpponentSeat
               key={opp.id}
@@ -155,19 +167,21 @@ export default function GameBoard() {
             />
           ))}
         </div>
-        {/* Tournament score bar */}
+
+        {/* Tournament scores */}
         {gameState.totalRounds > 1 && (
-          <div className="flex items-center justify-center gap-1.5 mt-1 px-2 flex-wrap">
-            <span className="px-2 py-0.5 rounded-md bg-amber-400/20 border border-amber-300/30 text-amber-200 text-[0.6rem] font-black">
-              Manche {gameState.roundNumber}/{gameState.totalRounds}
-            </span>
+          <div className="flex items-center justify-center gap-2 mt-1.5 flex-wrap">
             {gameState.players.map((p) => (
-              <span
+              <div
                 key={p.id}
-                className="px-1.5 py-0.5 rounded-md bg-black/30 border border-white/5 text-[0.55rem] font-bold text-white/60"
+                className={`px-2 py-0.5 rounded-md border text-[0.6rem] font-bold
+                  ${p.id === playerId
+                    ? 'bg-amber-400/20 border-amber-300/50 text-amber-200'
+                    : 'bg-black/30 border-white/5 text-white/50'
+                  }`}
               >
-                {p.name.slice(0, 6)}: <span className="text-amber-300">{gameState.scores[p.id] ?? 0}</span>
-              </span>
+                {p.name.slice(0, 5)}: <span className="font-black">{gameState.scores[p.id] ?? 0}</span>
+              </div>
             ))}
           </div>
         )}
@@ -244,44 +258,44 @@ export default function GameBoard() {
       {/* BOTTOM — Action bar + My hand */}
       <div className="relative z-10 shrink-0 pb-2">
         {/* Action bar (contextual buttons) */}
-        <div className="flex items-center justify-between px-2 pb-1 gap-1.5 overflow-x-auto no-scrollbar">
+        <div className="flex items-center justify-between px-3 pb-1.5 gap-2 overflow-x-auto no-scrollbar">
           {/* My player pill */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-black/40 border border-white/10 backdrop-blur">
-            <div className={`w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600
-              flex items-center justify-center text-white font-black text-[0.6rem] shadow-md
-              ${isMyTurn ? 'ring-2 ring-emerald-400' : ''}`}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/60 border border-white/10 backdrop-blur-sm">
+            <div className={`w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-700
+              flex items-center justify-center text-white font-black text-xs shadow-md border-2
+              ${isMyTurn ? 'border-amber-400/60 ring-2 ring-amber-400/30' : 'border-white/10'}`}
             >
               {me.name[0]?.toUpperCase()}
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="text-[0.6rem] font-black text-white truncate max-w-[4rem]">
+              <span className="text-[0.65rem] font-bold text-white/90 truncate max-w-[4.5rem]">
                 {me.name}
               </span>
-              <span className="text-[0.55rem] text-white/50 font-bold">
+              <span className="text-[0.6rem] text-white/50 font-bold">
                 {me.hand.length} 🃏
               </span>
             </div>
             {me.hasAnnouncedUpDown && (
-              <span className="px-1.5 py-0.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white text-[0.5rem] font-black rounded-md">
-                U&D!
+              <span className="px-1.5 py-0.5 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-[0.5rem] font-black rounded-md shadow-md">
+                U&D
               </span>
             )}
           </div>
 
-          {/* Announce button (huge and obvious when needed) */}
+          {/* Announce button (professional when needed) */}
           {gameState.enableAnnounce && me.hand.length === 2 && !me.hasAnnouncedUpDown && me.lastAnnouncedHandSize !== 2 && (
             <motion.button
               initial={{ scale: 0 }}
-              animate={{ scale: [1, 1.12, 1] }}
-              transition={{ repeat: Infinity, duration: 0.7 }}
-              whileTap={{ scale: 0.9 }}
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ repeat: Infinity, duration: 0.8 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleAnnounce}
-              className="px-4 py-2 rounded-2xl font-black text-sm
-                bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-600
-                text-white shadow-xl shadow-pink-500/50
-                border-2 border-rose-200/60"
+              className="px-4 py-2 rounded-xl font-black text-sm
+                bg-gradient-to-r from-rose-600 via-pink-600 to-fuchsia-700
+                text-white shadow-lg shadow-rose-500/30
+                border border-rose-300/50"
             >
-              🚀 UP & DOWN !
+              🚀 UP & DOWN
             </motion.button>
           )}
 
@@ -296,9 +310,9 @@ export default function GameBoard() {
                   quitGame(gameState.roomId);
                 }
               }}
-              className="px-2 py-1.5 rounded-xl font-black text-[0.6rem]
-                bg-red-500/20 border border-red-400/30 text-red-300
-                hover:bg-red-500/30 transition-all"
+              className="px-2.5 py-1.5 rounded-lg font-black text-[0.65rem]
+                bg-slate-700/40 border border-slate-500/30 text-slate-300
+                hover:bg-slate-700/60 transition-all"
               title="Abandonner"
             >
               ❌
@@ -306,7 +320,7 @@ export default function GameBoard() {
           </div>
         </div>
 
-        {/* Hand — the star of the show at the bottom */}
+        {/* Hand */}
         <PlayerHand
           cards={me.hand}
           gameState={gameState}

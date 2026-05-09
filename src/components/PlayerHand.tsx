@@ -1,5 +1,5 @@
 // ============================================================
-// Up and Down – Player Hand (Fan layout, viewport-safe)
+// Up and Down – Professional Player Hand
 // ============================================================
 
 'use client';
@@ -23,22 +23,22 @@ export default function PlayerHand({
   onPlayCard,
 }: PlayerHandProps) {
   const cardCount = cards.length;
-  // Wider fan for nicer UNO look
-  const maxFanAngle = Math.min(cardCount * 5, 55);
+  // Professional fan angle
+  const maxFanAngle = Math.min(cardCount * 4, 50);
   const fanStep = cardCount > 1 ? maxFanAngle / (cardCount - 1) : 0;
   const startAngle = -maxFanAngle / 2;
-  // Adapt overlap to card count (prevent cards going off-screen)
-  const overlapRem = cardCount > 9 ? -1.4 : cardCount > 7 ? -1.1 : cardCount > 5 ? -0.7 : -0.3;
+  // Overlap adjustment for card count
+  const overlapRem = cardCount > 9 ? -1.3 : cardCount > 7 ? -1 : cardCount > 5 ? -0.6 : -0.25;
   // Size: md on desktop, md on mobile too (better readability), sm if too many cards
   const cardSize = cardCount > 10 ? 'sm' : 'md';
 
   return (
-    <div className="relative flex items-end justify-center w-full h-[130px] sm:h-[150px] pt-6 overflow-visible">
+    <div className="relative flex items-end justify-center w-full h-[140px] sm:h-[160px] pt-6 overflow-visible">
       <AnimatePresence mode="popLayout">
         {cards.map((card, i) => {
           const playable = isMyTurn && isValidPlay(gameState, card);
           const angle = startAngle + fanStep * i;
-          const yOffset = Math.abs(angle) * 0.6; // More arc curvature
+          const yOffset = Math.abs(angle) * 0.5;
 
           return (
             <motion.div

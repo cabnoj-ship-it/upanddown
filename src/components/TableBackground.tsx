@@ -1,72 +1,86 @@
 // ============================================================
-// Up and Down – Table Background (UNO-inspired felt)
+// Up and Down – Professional Casino Felt Table
 // ============================================================
 
 'use client';
 
-import { motion } from 'framer-motion';
-
 /**
- * Felt table style inspired by UNO / Poker.
- * Radial gradient center (lighter) → dark edges, with subtle pattern overlay.
+ * Casino-grade green felt table with:
+ * - Realistic felt texture (noise)
+ * - Golden border trim
+ * - Subtle lighting vignette
+ * - Professional depth
  */
 export default function TableBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Base felt gradient */}
+      {/* Base green felt - casino grade */}
       <div
         className="absolute inset-0"
         style={{
-          background:
-            'radial-gradient(ellipse at center, #1e4731 0%, #123122 40%, #0a1e14 80%, #05110b 100%)',
+          background: `
+            radial-gradient(ellipse at center, #1a5c3a 0%, #145a32 30%, #0d4a2a 60%, #073a1e 85%, #042815 100%)
+          `,
         }}
       />
 
-      {/* Subtle felt texture */}
+      {/* Felt texture overlay */}
       <div
-        className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
+        className="absolute inset-0 opacity-[0.08] mix-blend-multiply"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E")`,
-          backgroundSize: '200px 200px',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='felt'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23felt)'/%3E%3C/svg%3E")`,
+          backgroundSize: '400px 400px',
         }}
       />
 
-      {/* Center soft spotlight (where pile sits) */}
+      {/* Golden border trim (inner) */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute inset-[2px] rounded-[1rem] border-4"
+          style={{
+            borderColor: 'rgba(212, 175, 55, 0.4)',
+            boxShadow: 'inset 0 0 40px rgba(0, 0, 0, 0.3)',
+          }}
+        />
+      </div>
+
+      {/* Golden border trim (outer glow) */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute inset-[1px] rounded-[1.1rem] border-[6px] opacity-30"
+          style={{
+            borderColor: 'rgba(212, 175, 55, 0.3)',
+            boxShadow: '0 0 60px rgba(212, 175, 55, 0.15)',
+          }}
+        />
+      </div>
+
+      {/* Center spotlight for play area */}
       <div
-        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px] opacity-40"
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[150px]"
         style={{
-          width: '60vmin',
-          height: '60vmin',
-          background: 'radial-gradient(circle, rgba(250,230,100,0.4) 0%, transparent 70%)',
+          width: '70vmin',
+          height: '70vmin',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 65%)',
         }}
       />
 
-      {/* Vibrant corner halos (UNO-style colors) */}
-      <motion.div
-        animate={{ opacity: [0.25, 0.4, 0.25] }}
-        transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
-        className="absolute -top-24 -left-24 w-[40vmin] h-[40vmin] rounded-full blur-[100px]"
-        style={{ background: 'radial-gradient(circle, #e11d48, transparent 65%)' }}
-      />
-      <motion.div
-        animate={{ opacity: [0.2, 0.35, 0.2] }}
-        transition={{ repeat: Infinity, duration: 7, delay: 1, ease: 'easeInOut' }}
-        className="absolute -top-20 -right-24 w-[45vmin] h-[45vmin] rounded-full blur-[110px]"
-        style={{ background: 'radial-gradient(circle, #2563eb, transparent 65%)' }}
-      />
-      <motion.div
-        animate={{ opacity: [0.2, 0.35, 0.2] }}
-        transition={{ repeat: Infinity, duration: 8, delay: 2, ease: 'easeInOut' }}
-        className="absolute -bottom-24 left-1/3 w-[50vmin] h-[50vmin] rounded-full blur-[110px]"
-        style={{ background: 'radial-gradient(circle, #ca8a04, transparent 65%)' }}
-      />
-
-      {/* Edge vignette */}
+      {/* Professional edge vignette for depth */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%)',
+          background: 'radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0.75) 100%)',
         }}
+      />
+
+      {/* Subtle corner ambient light (warm casino lighting) */}
+      <div
+        className="absolute -top-32 -left-32 w-[50vmin] h-[50vmin] rounded-full blur-[120px] opacity-[0.06]"
+        style={{ background: 'radial-gradient(circle, #fbbf24, transparent 70%)' }}
+      />
+      <div
+        className="absolute -bottom-32 -right-32 w-[50vmin] h-[50vmin] rounded-full blur-[120px] opacity-[0.05]"
+        style={{ background: 'radial-gradient(circle, #f59e0b, transparent 70%)' }}
       />
     </div>
   );
